@@ -1,11 +1,20 @@
 const express = require("express");
 const { randomUUID } = require("crypto")
+const fs = require("fs")
 
 const app = express();
 
 app.use(express.json());
 
-const products = [];
+let products = [];
+
+fs.readFile("products.json", "utf-8", (err, data) => {
+    if(err){
+        console.log(err)
+    }else{
+        products = JSON.parse(data);
+    }
+})
 
 /**
  * POST => Inserir um dado
@@ -32,6 +41,8 @@ app.post("/products", (req, res) => {
 
     products.push(product)
 
+    ProductFile();
+    
     console.log(product)
 
 })
@@ -58,7 +69,35 @@ app.put("/products/:id", (req, res) => {
         price
     }
 
+    ProductFile();
+
+
     return res.json({ message: "Produto alterado com sucesso"})
 })
+
+app.delete("/products/:id", (req, res) => {
+    const { id } = req.params;
+
+    const productIndex = products.findIndex((product) => product.id === id);
+    products.splice(productIndex, 1);
+
+    productFile();
+
+    res.json({
+        message: "produto removido com sucesso"
+    })
+
+
+})
+
+function productFile () {
+    fs.writeFile("products.json", JSON.stringify(products), (err) => {
+        if(err){
+            console.log(err)
+        } else {
+            console.log('produto inserido')
+        }
+    })
+}
 
 app.listen(4002, () => console.log("Server is running on port 4002"));
